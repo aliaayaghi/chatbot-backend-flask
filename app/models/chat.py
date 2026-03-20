@@ -9,9 +9,12 @@ class Chat(db.Model):
 
     # Columns
     id = db.Column(db.String, primary_key=True)
+    # Add this line with your other columns
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     title = db.Column(db.String(100), nullable=False)
     timestamp = db.Column(db.Float, nullable=False,
                           default=lambda: datetime.now().timestamp() * 1000)
+    
 
     # Messages and history are arrays of objects
     # SQLite doesn't have an array type so we store them as JSON strings

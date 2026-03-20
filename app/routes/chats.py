@@ -1,25 +1,27 @@
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.database import db
 from app.models.chat import Chat
 
-# A Blueprint is a mini Flask app — a group of related routes
-# This keeps chat routes isolated from any future routes (auth, users etc)
 chats_bp = Blueprint("chats", __name__)
 
 
-# GET /chats — return all chats, newest first
 @chats_bp.route("/chats", methods=["GET"])
+@jwt_required()
 def get_chats():
-    chats = Chat.query.order_by(Chat.timestamp.desc()).all()
+    user_id = get_jwt_identity()
+    # Only return chats belonging to this user
+    chats = Chat.query.filter_by(user_id=user_id)\
+                      .order_by(Chat.timestamp.desc()).all()
     return jsonify({ "chats": [c.to_dict() for c in chats] }), 200
 
 
-# POST /chats — create a new chat
 @chats_bp.route("/chats", methods=["POST"])
+@jwt_required()
 def create_chat():
+    user_id = get_jwt_identity()
     data = request.get_json()
 
-    # Validate — make sure required fields are present
     if not data or not data.get("id") or not data.get("title"):
         return jsonify({ "error": "id and title are required" }), 400
 
@@ -27,6 +29,7 @@ def create_chat():
         id=data["id"],
         title=data["title"],
         timestamp=data.get("timestamp"),
+        user_id=user_id,       # ← attach to this user
     )
     chat.messages = data.get("messages", [])
     chat.history = data.get("history", [])
@@ -37,13 +40,17 @@ def create_chat():
     return jsonify({ "chat": chat.to_dict() }), 201
 
 
-# PUT /chats/<id> — update an existing chat
 @chats_bp.route("/chats/<chat_id>", methods=["PUT"])
+@jwt_required()
 def update_chat(chat_id):
-    # 404 if chat doesn't exist
-    chat = Chat.query.get_or_404(chat_id)
-    data = request.get_json()
+    user_id = get_jwt_identity()
+    chat = Chat.query.filter_by(id=chat_id, user_id=user_id).first()
 
+    # 404 if not found OR belongs to someone else
+    if not chat:
+        return jsonify({ "error": "Chat not found" }), 404
+
+    data = request.get_json()
     if "messages" in data:
         chat.messages = data["messages"]
     if "history" in data:
@@ -52,14 +59,18 @@ def update_chat(chat_id):
         chat.timestamp = data["timestamp"]
 
     db.session.commit()
-
     return jsonify({ "chat": chat.to_dict() }), 200
 
 
-# DELETE /chats/<id> — delete a chat
 @chats_bp.route("/chats/<chat_id>", methods=["DELETE"])
+@jwt_required()
 def delete_chat(chat_id):
-    chat = Chat.query.get_or_404(chat_id)
+    user_id = get_jwt_identity()
+    chat = Chat.query.filter_by(id=chat_id, user_id=user_id).first()
+
+    if not chat:
+        return jsonify({ "error": "Chat not found" }), 404
+
     db.session.delete(chat)
     db.session.commit()
     return jsonify({ "message": "deleted" }), 200

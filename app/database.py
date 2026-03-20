@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+import os
 
 # Create one single db instance
 # This gets imported by everything that needs the database
@@ -7,7 +8,7 @@ db = SQLAlchemy()
 
 def init_db(app):
     # Tell SQLAlchemy where the database file lives
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///chats.db"
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
 
     # Don't send a signal every time data changes (saves memory)
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -17,5 +18,6 @@ def init_db(app):
 
     # Create all tables if they don't exist yet
     with app.app_context():
+        from app.models.user import User
         from app.models.chat import Chat
         db.create_all()
