@@ -341,7 +341,7 @@ Every model, every route, every query stays identical.
 
 ## Related
 
-- [Gemini Chat Frontend](https://github.com/your-username/gemini-chat) — Next.js frontend
+- [Chatbot](https://github.com/aliaayaghi/Chatbot) — Next.js frontend
 
 ---
 
