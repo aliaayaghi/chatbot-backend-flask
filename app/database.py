@@ -12,6 +12,12 @@ def init_db(app):
 
     # Don't send a signal every time data changes (saves memory)
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_pre_ping": True,        # tests connection before using it
+        "pool_recycle": 300,          # recycle connections every 5 minutes
+        "pool_size": 5,               # max 5 connections in the pool
+        "max_overflow": 2,            # allow 2 extra connections if needed
+    }
 
     # Connect the db instance to this Flask app
     db.init_app(app)

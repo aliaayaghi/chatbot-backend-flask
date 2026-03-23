@@ -21,7 +21,7 @@ def create_app():
     app.config["JWT_HEADER_NAME"] = "Authorization"
     app.config["JWT_HEADER_TYPE"] = "Bearer"
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=24)
-    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+    
 
     # Allow requests from your Next.js frontend
     CORS(app, resources={r"/*": {"origins": os.getenv("FRONTEND_URL")}})
