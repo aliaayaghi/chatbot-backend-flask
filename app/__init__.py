@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from app.database import init_db
 from app.routes.chats import chats_bp
 from app.routes.auth import auth_bp, init_auth
+from datetime import timedelta
 import os
 
 load_dotenv()
@@ -15,6 +16,11 @@ def create_app():
 
     # JWT configuration
     app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
+    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+    app.config["JWT_TOKEN_LOCATION"] = ["headers"]
+    app.config["JWT_HEADER_NAME"] = "Authorization"
+    app.config["JWT_HEADER_TYPE"] = "Bearer"
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=24)
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 
     # Allow requests from your Next.js frontend
